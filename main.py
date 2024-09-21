@@ -113,18 +113,21 @@ def banking_system():
         create_account()
     elif menu_choice == "Log In":
         user = login()
+        status = True
         if user:
-            sub_menu_choice = st.selectbox("Select an action", ["Deposit Money", "Withdraw Money", "Check Balance", "Transfer Money", "Log Out"])
-            if sub_menu_choice == "Deposit Money":
-                deposit(user)
-            elif sub_menu_choice == "Withdraw Money":
-                withdraw(user)
-            elif sub_menu_choice == "Check Balance":
-                check_balance(user)
-            elif sub_menu_choice == "Transfer Money":
-                transfer(user)
-            elif sub_menu_choice == "Log Out":
-                st.info("Logged out.")
+            while(status):
+                sub_menu_choice = st.selectbox("Select an action", ["Deposit Money", "Withdraw Money", "Check Balance", "Transfer Money", "Log Out"])
+                if sub_menu_choice == "Deposit Money":
+                    deposit(user)
+                elif sub_menu_choice == "Withdraw Money":
+                    withdraw(user)
+                elif sub_menu_choice == "Check Balance":
+                    check_balance(user)
+                elif sub_menu_choice == "Transfer Money":
+                    transfer(user)
+                elif sub_menu_choice == "Log Out":
+                    st.info("Logged out.")
+                    status = False
     elif menu_choice == "Exit":
         st.info("Exiting system. Goodbye!")
 
