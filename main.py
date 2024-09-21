@@ -26,111 +26,119 @@ def save_accounts(accounts):
 accounts = load_accounts()
 
 # Function to create an account
-def create_account():
-    st.subheader("Create Account")
-    username = st.text_input("Enter a username:")
-    password = st.text_input("Create a password:", type='password')
+def create_account(username, password):
+    if username in accounts:
+        st.error("Error: Account with this username already exists!")
+        return
     
-    if st.button("Create Account"):
-        if username in accounts:
-            st.error("Error: Account with this username already exists!")
-        elif len(password) < 6:
-            st.error("Error: Password must be at least 6 characters long.")
-        else:
-            accounts[username] = {"password": password, "balance": 0}
-            save_accounts(accounts)
-            st.success(f"Account created successfully for {username}!")
+    if len(password) < 6:
+        st.error("Error: Password must be at least 6 characters long.")
+        return
+
+    accounts[username] = {"password": password, "balance": 0}
+    save_accounts(accounts)
+    st.success(f"Account created successfully for {username}!")
 
 # Function to log into an account
-def login():
-    st.subheader("Log In")
-    username = st.text_input("Enter your username:")
-    password = st.text_input("Enter your password:", type='password')
-
-    if st.button("Log In"):
-        if username not in accounts:
-            st.error("Error: Account does not exist.")
-            return None
-        if password == accounts[username]["password"]:
-            st.success(f"Login successful! Welcome, {username}.")
-            return username
-        else:
-            st.error("Error: Incorrect username or password.")
-            return None
+def login(username, password):
+    if username not in accounts:
+        st.error("Error: Account does not exist.")
+        return None
+    
+    if password == accounts[username]["password"]:
+        st.success(f"Login successful! Welcome, {username}.")
+        return username
+    else:
+        st.error("Error: Incorrect password.")
+        return None
 
 # Function to deposit money
-def deposit(username):
-    st.subheader("Deposit Money")
-    amount = st.number_input("Enter amount to deposit:", min_value=0.01)
-    
-    if st.button("Deposit"):
-        accounts[username]["balance"] += amount
-        save_accounts(accounts)
-        st.success(f"Successfully deposited ${amount:.2f}. Current balance: ${accounts[username]['balance']:.2f}")
+def deposit(username, amount):
+    if amount <= 0:
+        st.error("Error: Deposit amount must be positive.")
+        return
+    accounts[username]["balance"] += amount
+    save_accounts(accounts)
+    st.success(f"Successfully deposited ${amount:.2f}. Current balance: ${accounts[username]['balance']:.2f}")
 
 # Function to withdraw money
-def withdraw(username):
-    st.subheader("Withdraw Money")
-    amount = st.number_input("Enter amount to withdraw:", min_value=0.01)
-
-    if st.button("Withdraw"):
-        if amount > accounts[username]["balance"]:
-            st.error("Error: Insufficient balance.")
-        else:
-            accounts[username]["balance"] -= amount
-            save_accounts(accounts)
-            st.success(f"Successfully withdrew ${amount:.2f}. Current balance: ${accounts[username]['balance']:.2f}")
+def withdraw(username, amount):
+    if amount <= 0:
+        st.error("Error: Withdrawal amount must be positive.")
+        return
+    if amount > accounts[username]["balance"]:
+        st.error("Error: Insufficient balance.")
+        return
+    accounts[username]["balance"] -= amount
+    save_accounts(accounts)
+    st.success(f"Successfully withdrew ${amount:.2f}. Current balance: ${accounts[username]['balance']:.2f}")
 
 # Function to check account balance
 def check_balance(username):
-    st.subheader("Check Balance")
-    st.write(f"Current balance: ${accounts[username]['balance']:.2f}")
+    st.info(f"Current balance: ${accounts[username]['balance']:.2f}")
 
 # Function to transfer money to another account
-def transfer(username):
-    st.subheader("Transfer Money")
-    recipient = st.text_input("Enter the username of the recipient:")
-    amount = st.number_input("Enter amount to transfer:", min_value=0.01)
+def transfer(username, recipient, amount):
+    if recipient not in accounts:
+        st.error("Error: Recipient account does not exist.")
+        return
+    if amount <= 0:
+        st.error("Error: Transfer amount must be positive.")
+        return
+    if amount > accounts[username]["balance"]:
+        st.error("Error: Insufficient balance for transfer.")
+        return
+    accounts[username]["balance"] -= amount
+    accounts[recipient]["balance"] += amount
+    save_accounts(accounts)
+    st.success(f"Successfully transferred ${amount:.2f} to {recipient}. Current balance: ${accounts[username]['balance']:.2f}")
 
-    if st.button("Transfer"):
-        if recipient not in accounts:
-            st.error("Error: Recipient account does not exist.")
-        elif amount > accounts[username]["balance"]:
-            st.error("Error: Insufficient balance for transfer.")
-        else:
-            accounts[username]["balance"] -= amount
-            accounts[recipient]["balance"] += amount
-            save_accounts(accounts)
-            st.success(f"Successfully transferred ${amount:.2f} to {recipient}. Current balance: ${accounts[username]['balance']:.2f}")
+# Streamlit app interface
+st.title("Simple Banking System")
 
-# Main function to display the banking system interface
-def banking_system():
-    st.title("Simple Banking System")
+# Create account section
+if st.sidebar.button("Create Account"):
+    st.sidebar.subheader("Create a new account")
+    new_username = st.sidebar.text_input("Enter a username")
+    new_password = st.sidebar.text_input("Create a password", type="password")
+    if st.sidebar.button("Submit"):
+        create_account(new_username, new_password)
+
+# Log in section
+if 'logged_in_user' not in st.session_state:
+    st.sidebar.subheader("Log in")
+    username = st.sidebar.text_input("Enter your username")
+    password = st.sidebar.text_input("Enter your password", type="password")
+    if st.sidebar.button("Log In"):
+        logged_in_user = login(username, password)
+        if logged_in_user:
+            st.session_state.logged_in_user = logged_in_user
+
+# Banking menu after login
+if 'logged_in_user' in st.session_state:
+    st.subheader(f"Welcome, {st.session_state.logged_in_user}")
+
+    action = st.selectbox("Choose an action", ["Deposit Money", "Withdraw Money", "Check Balance", "Transfer Money", "Log Out"])
+
+    if action == "Deposit Money":
+        deposit_amount = st.number_input("Enter amount to deposit", min_value=0.0, step=1.0)
+        if st.button("Deposit"):
+            deposit(st.session_state.logged_in_user, deposit_amount)
     
-    menu_choice = st.sidebar.selectbox("Select an option", ["Create Account", "Log In", "Exit"])
+    elif action == "Withdraw Money":
+        withdraw_amount = st.number_input("Enter amount to withdraw", min_value=0.0, step=1.0)
+        if st.button("Withdraw"):
+            withdraw(st.session_state.logged_in_user, withdraw_amount)
     
-    if menu_choice == "Create Account":
-        create_account()
-    elif menu_choice == "Log In":
-        user = login()
-        status = True
-        if user:
-            sub_menu_choice = st.selectbox("Select an action", ["Deposit Money", "Withdraw Money", "Check Balance", "Transfer Money", "Log Out"])
-            while(status):
-                if sub_menu_choice == "Deposit Money":
-                    deposit(user)
-                elif sub_menu_choice == "Withdraw Money":
-                    withdraw(user)
-                elif sub_menu_choice == "Check Balance":
-                    check_balance(user)
-                elif sub_menu_choice == "Transfer Money":
-                    transfer(user)
-                elif sub_menu_choice == "Log Out":
-                    st.info("Logged out.")
-                    status = False
-    elif menu_choice == "Exit":
-        st.info("Exiting system. Goodbye!")
+    elif action == "Check Balance":
+        check_balance(st.session_state.logged_in_user)
+    
+    elif action == "Transfer Money":
+        recipient = st.text_input("Enter the recipient's username")
+        transfer_amount = st.number_input("Enter amount to transfer", min_value=0.0, step=1.0)
+        if st.button("Transfer"):
+            transfer(st.session_state.logged_in_user, recipient, transfer_amount)
 
-# Run the banking system
-if __name__ == "__main__":
-    banking_system()
+    elif action == "Log Out":
+        st.session_state.pop('logged_in_user')
+        st.success("Logged out successfully.")
