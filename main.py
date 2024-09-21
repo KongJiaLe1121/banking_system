@@ -79,7 +79,7 @@ st.title("Simple Banking System")
 init_session_state()
 
 # Create account section
-if st.sidebar.button("Create Account"):
+if st.sidebar.checkbox("Create Account"):
     st.sidebar.subheader("Create a new account")
     new_username = st.sidebar.text_input("Enter a username")
     new_password = st.sidebar.text_input("Create a password", type="password")
