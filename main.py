@@ -115,8 +115,8 @@ def banking_system():
         user = login()
         status = True
         if user:
+            sub_menu_choice = st.selectbox("Select an action", ["Deposit Money", "Withdraw Money", "Check Balance", "Transfer Money", "Log Out"])
             while(status):
-                sub_menu_choice = st.selectbox("Select an action", ["Deposit Money", "Withdraw Money", "Check Balance", "Transfer Money", "Log Out"])
                 if sub_menu_choice == "Deposit Money":
                     deposit(user)
                 elif sub_menu_choice == "Withdraw Money":
